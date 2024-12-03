@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: backend-nodejs:latest
+    build: ./backend
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  frontend:
+    image: frontend-nginx:latest
+    build: ./frontend
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

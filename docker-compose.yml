@@ -29,7 +29,8 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
     volumes:
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend:/usr/share/nginx/html
 
   mysql:
     image: mysql:5.7
@@ -52,9 +53,9 @@ services:
       - "--certificatesresolvers.myresolver.acme.email=${CERT_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "8080:80"
+      - "82:80"
       - "443:443"
-      - "8081:8080" # Traefik dashboard
+      - "8082:8080" # Traefik dashboard
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "letsencrypt:/letsencrypt"

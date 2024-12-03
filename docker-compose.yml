@@ -1,3 +1,5 @@
+version: '3.7'
+
 services:
   backend:
     image: backend-nodejs:latest
@@ -6,6 +8,11 @@ services:
       - "3000:3000"
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`<studentnr>.devops-ap.be`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
   frontend:
     image: frontend-nginx:latest
@@ -14,6 +21,13 @@ services:
       - "80:80"
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`<studentnr>.devops-ap.be`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
 
   mysql:
     image: mysql:5.7
@@ -24,6 +38,27 @@ services:
       MYSQL_PASSWORD: password
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  traefik:
+    image: traefik:v2.5
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=your-email@example.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
     networks:
       - app-network
 
@@ -33,3 +68,4 @@ networks:
 
 volumes:
   mysql-data:
+  letsencrypt:
